@@ -100,7 +100,7 @@ int main(void)
   while (1) {
     /* USER CODE END WHILE */
 	  uint16_t adc_value = MCP3004_ReadCH0();
-	  uint16_t compare_value = 3000 + (adc_value * 3000) / 1023;
+	  uint16_t compare_value = 3200 + (adc_value * 3200) / 1023;
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, compare_value);
 	  HAL_Delay(10);
     /* USER CODE BEGIN 3 */
