@@ -19,6 +19,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -50,7 +52,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+uint16_t MCP3004_ReadCH0(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -87,16 +89,20 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_SPI1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
+  while (1) {
     /* USER CODE END WHILE */
-
+	  uint16_t adc_value = MCP3004_ReadCH0();
+	  uint16_t compare_value = 3000 + (adc_value * 3000) / 1023;
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, compare_value);
+	  HAL_Delay(10);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -143,7 +149,17 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint16_t MCP3004_ReadCH0(void) {
+    uint8_t txData[3] = {0x01, 0x80, 0x00};
+    uint8_t rxData[3] = {0};
 
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+    HAL_SPI_TransmitReceive(&hspi1, txData, rxData, 3, HAL_MAX_DELAY);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+
+    uint16_t result = ((rxData[1] & 0x03) << 8) | rxData[2];
+    return result;
+}
 /* USER CODE END 4 */
 
 /**
